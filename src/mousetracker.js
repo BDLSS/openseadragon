@@ -904,9 +904,6 @@
 
         if ( event.wheelDelta ) { // IE and Opera
             nDelta = event.wheelDelta;
-            if ( window.opera ) {  // Opera has the values reversed
-                nDelta = -nDelta;
-            }
         } else if (event.detail) { // Mozilla FireFox
             nDelta = -event.detail;
         }

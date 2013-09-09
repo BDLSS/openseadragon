@@ -1073,46 +1073,52 @@ $.extend( $.Viewer.prototype, $.EventHandler.prototype, $.ControlDock.prototype,
      * @return {OpenSeadragon.Viewer} Chainable.
      */
     goToPage: function( page ){
-        //page is a 1 based index so normalize now
-        //page = page;
-        this.raiseEvent( 'page', { page: page, viewer: this } );
+        //page is 0 based index
+        page = +page; // convert string
 
-        if( this.tileSources.length > page ){
+      if( THIS[ this.hash ].sequence !== page ) { // Stop refreshing if nothing to change.
 
-            THIS[ this.hash ].sequence = page;
-
-            if( this.nextButton ){
-                if( ( this.tileSources.length - 1 ) === page  ){
-                    //Disable next button
-                    if(!this.navPrevNextWrap){
-                        this.nextButton.disable();
-                    }
-                } else {
-                    this.nextButton.enable();
-                }
-            }
-            if( this.previousButton ){
-                if( page > 0 ){
-                    //Enable previous button
-                    this.previousButton.enable();
-                } else {
-                    if(!this.navPrevNextWrap){
-                        this.previousButton.disable();
+            this.raiseEvent( 'page', { page: page, viewer: this } );
+ 
+            if( this.tileSources.length > page ){
+ 
+                THIS[ this.hash ].sequence = page;
+ 
+                if( this.nextButton ){
+                    if( ( this.tileSources.length - 1 ) === page  ){
+                        //Disable next button
+                        if(!this.navPrevNextWrap){
+                            this.nextButton.disable();
+                        }
+                    } else {
+                        this.nextButton.enable();
                     }
                 }
+                if( this.previousButton ){
+                    if( page > 0 ){
+                        //Enable previous button
+                        this.previousButton.enable();
+                    } else {
+                        if(!this.navPrevNextWrap){
+                            this.previousButton.disable();
+                        }
+                    }
+                }
+ 
+                this.open( this.tileSources[ page ] );
             }
-
-            this.open( this.tileSources[ page ] );
-        }
-
-        if( $.isFunction( this.onPageChange ) ){
-            this.onPageChange({
-                page: page,
-                viewer: this
-            });
-        }
-        if( this.referenceStrip ){
-            this.referenceStrip.setFocus( page );
+ 
+            if( $.isFunction( this.onPageChange ) ){
+                if( page >= 0 && page < this.tileSources.length ) {
+                    this.onPageChange({
+                        page: page,
+                        viewer: this
+                     });
+                }
+            }
+            if( this.referenceStrip ){
+                this.referenceStrip.setFocus( page );
+            }
         }
         return this;
     },
@@ -1724,19 +1730,23 @@ function onFullPage() {
 
 function onPrevious(){
     var previous = THIS[ this.hash ].sequence - 1;
-    if(this.navPrevNextWrap && previous < 0){
-        previous += this.tileSources.length;
+    if( this.navPrevNextWrap || previous >= 0 ) {
+        if( previous < 0) {
+            previous += this.tileSources.length;
+        }
+        this.goToPage( previous );
     }
-    this.goToPage( previous );
 }
 
 
 function onNext(){
     var next = THIS[ this.hash ].sequence + 1;
-    if(this.navPrevNextWrap && next >= this.tileSources.length){
-        next = 0;
+    if(this.navPrevNextWrap || next < this.tileSources.length ) {
+        if( next >= this.tileSources.length ) {
+          next = 0;
+        }
+        this.goToPage( next );
     }
-    this.goToPage( next );
 }
 
 

@@ -263,11 +263,13 @@ $.extend( $.Button.prototype, $.EventHandler.prototype, {
     disable: function(){
         this.notifyGroupExit();
         this.element.disabled = true;
+        this.element.setAttribute("data-disabled", "true" );
         $.setElementOpacity( this.element, 0.2, true );
     },
 
     enable: function(){
         this.element.disabled = false;
+        this.element.setAttribute("data-disabled", "false" );
         $.setElementOpacity( this.element, 1.0, true );
         this.notifyGroupEnter();
     }
