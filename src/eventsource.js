@@ -1,5 +1,5 @@
 /*
- * OpenSeadragon - EventHandler
+ * OpenSeadragon - EventSource
  *
  * Copyright (C) 2009 CodePlex Foundation
  * Copyright (C) 2010-2013 OpenSeadragon contributors
@@ -35,27 +35,34 @@
 (function($){
 
 /**
- * For use by classes which want to support custom, non-browser events.
- * TODO: This is an awful name!  This thing represents an "event source",
- *       not an "event handler".  PLEASE change the to EventSource. Also please
- *       change 'addHandler', 'removeHandler' and 'raiseEvent' to 'bind',
- *       'unbind', and 'trigger' respectively.  Finally add a method 'one' which
- *       automatically unbinds a listener after the first triggered event that
- *       matches.
- * @class
+ * Event handler method signature used by all OpenSeadragon events.
+ *
+ * @callback EventHandler
+ * @memberof OpenSeadragon
+ * @param {Object} event - See individual events for event-specific properties.
  */
-$.EventHandler = function() {
+
+
+/**
+ * @class EventSource
+ * @classdesc For use by classes which want to support custom, non-browser events.
+ *
+ * @memberof OpenSeadragon
+ */
+$.EventSource = function() {
     this.events = {};
 };
 
-$.EventHandler.prototype = {
+$.EventSource.prototype = /** @lends OpenSeadragon.EventSource.prototype */{
+
+    // TODO: Add a method 'one' which automatically unbinds a listener after the first triggered event that matches.
 
     /**
      * Add an event handler for a given event.
      * @function
      * @param {String} eventName - Name of event to register.
-     * @param {Function} handler - Function to call when event is triggered.
-     * @param {Object} optional userData - Arbitrary object to be passed to the handler.
+     * @param {OpenSeadragon.EventHandler} handler - Function to call when event is triggered.
+     * @param {Object} [userData=null] - Arbitrary object to be passed unchanged to the handler.
      */
     addHandler: function ( eventName, handler, userData ) {
         var events = this.events[ eventName ];
@@ -71,7 +78,7 @@ $.EventHandler.prototype = {
      * Remove a specific event handler for a given event.
      * @function
      * @param {String} eventName - Name of event for which the handler is to be removed.
-     * @param {Function} handler - Function to be removed.
+     * @param {OpenSeadragon.EventHandler} handler - Function to be removed.
      */
     removeHandler: function ( eventName, handler ) {
         var events = this.events[ eventName ],
@@ -108,7 +115,7 @@ $.EventHandler.prototype = {
     },
 
     /**
-     * Retrive the list of all handlers registered for a given event.
+     * Get a function which iterates the list of all handlers registered for a given event, calling the handler for each.
      * @function
      * @param {String} eventName - Name of event to get handlers for.
      */
@@ -125,8 +132,9 @@ $.EventHandler.prototype = {
                 length = events.length;
             for ( i = 0; i < length; i++ ) {
                 if ( events[ i ] ) {
+                    args.eventSource = source;
                     args.userData = events[ i ].userData;
-                    events[ i ].handler( source, args );
+                    events[ i ].handler( args );
                 }
             }
         };
@@ -136,7 +144,7 @@ $.EventHandler.prototype = {
      * Trigger an event, optionally passing additional information.
      * @function
      * @param {String} eventName - Name of event to register.
-     * @param {Function} handler - Function to call when event is triggered.
+     * @param {Object} eventArgs - Event-specific data.
      */
     raiseEvent: function( eventName, eventArgs ) {
         //uncomment if you want to get a log of all events

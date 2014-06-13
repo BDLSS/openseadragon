@@ -37,7 +37,7 @@
             };
 
             $canvas
-                .simulate( 'mouseover', event )
+                .simulate( OpenSeadragon.MouseTracker.haveMouseEnter ? 'mouseenter' : 'mouseover', event )
                 .simulate( 'mousedown', event );
             for ( var i = 0; i < args.dragCount; i++ ) {
                 event.clientX += args.dragDx;
@@ -46,7 +46,8 @@
                     .simulate( "mousemove", event );
             }
             $canvas
-                .simulate( 'mouseup', event );
+                .simulate( 'mouseup', event )
+                .simulate( OpenSeadragon.MouseTracker.haveMouseEnter ? 'mouseleave' : 'mouseout', event );
         },
 
         initializeTestDOM: function () {

@@ -35,7 +35,8 @@
 (function( $ ){
 
 /**
- * @class
+ * @class DziTileSource
+ * @memberof OpenSeadragon
  * @extends OpenSeadragon.TileSource
  * @param {Number|Object} width - the pixel width of the image or the idiomatic
  *      options object which is used instead of positional arguments.
@@ -92,14 +93,13 @@ $.DziTileSource = function( width, height, tileSize, tileOverlap, tilesUrl, file
 
 };
 
-$.extend( $.DziTileSource.prototype, $.TileSource.prototype, {
+$.extend( $.DziTileSource.prototype, $.TileSource.prototype, /** @lends OpenSeadragon.DziTileSource.prototype */{
 
 
     /**
      * Determine if the data and/or url imply the image service is supported by
      * this tile source.
      * @function
-     * @name OpenSeadragon.DziTileSource.prototype.supports
      * @param {Object|Array} data
      * @param {String} optional - url
      */
@@ -118,7 +118,6 @@ $.extend( $.DziTileSource.prototype, $.TileSource.prototype, {
     /**
      *
      * @function
-     * @name OpenSeadragon.DziTileSource.prototype.configure
      * @param {Object|XMLDocument} data - the raw configuration
      * @param {String} url - the url the data was retreived from if any.
      * @return {Object} options - A dictionary of keyword arguments sufficient
@@ -138,7 +137,13 @@ $.extend( $.DziTileSource.prototype, $.TileSource.prototype, {
         }
 
         if (url && !options.tilesUrl) {
-            options.tilesUrl = url.replace(/([^\/]+)\.(dzi|xml|js)$/, '$1_files/');
+            options.tilesUrl = url.replace(/([^\/]+)\.(dzi|xml|js)(\?.*|$)/, '$1_files/');
+
+            if (url.search(/\.(dzi|xml|js)\?/) != -1) {
+                options.queryParams = url.match(/\?.*/);
+            }else{
+                options.queryParams = '';
+            }
         }
 
         return options;
@@ -147,19 +152,17 @@ $.extend( $.DziTileSource.prototype, $.TileSource.prototype, {
 
     /**
      * @function
-     * @name OpenSeadragon.DziTileSource.prototype.getTileUrl
      * @param {Number} level
      * @param {Number} x
      * @param {Number} y
      */
     getTileUrl: function( level, x, y ) {
-        return [ this.tilesUrl, level, '/', x, '_', y, '.', this.fileFormat ].join( '' );
+        return [ this.tilesUrl, level, '/', x, '_', y, '.', this.fileFormat, this.queryParams ].join( '' );
     },
 
 
     /**
      * @function
-     * @name OpenSeadragon.DziTileSource.prototype.tileExists
      * @param {Number} level
      * @param {Number} x
      * @param {Number} y

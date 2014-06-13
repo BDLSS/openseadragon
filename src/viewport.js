@@ -36,7 +36,11 @@
 
 
 /**
- * @class
+ * @class Viewport
+ * @classdesc Handles coordinate-related functionality (zoom, pan, rotation, etc.) for an {@link OpenSeadragon.Viewer}.
+ * A new instance is created for each TileSource opened (see {@link OpenSeadragon.Viewer#viewport}).
+ *
+ * @memberof OpenSeadragon
  */
 $.Viewport = function( options ) {
 
@@ -105,11 +109,12 @@ $.Viewport = function( options ) {
     this.update();
 };
 
-$.Viewport.prototype = {
+$.Viewport.prototype = /** @lends OpenSeadragon.Viewport.prototype */{
 
     /**
      * @function
      * @return {OpenSeadragon.Viewport} Chainable.
+     * @fires OpenSeadragon.Viewer.event:reset-size
      */
     resetContentSize: function( contentSize ){
         this.contentSize    = contentSize;
@@ -121,9 +126,18 @@ $.Viewport.prototype = {
         this.homeBounds = new $.Rect( 0, 0, 1, this.contentAspectY );
 
         if( this.viewer ){
+            /**
+             * Raised when the viewer's content size is reset (see {@link OpenSeadragon.Viewport#resetContentSize}).
+             *
+             * @event reset-size
+             * @memberof OpenSeadragon.Viewer
+             * @type {object}
+             * @property {OpenSeadragon.Viewer} eventSource - A reference to the Viewer which raised this event.
+             * @property {OpenSeadragon.Point} contentSize
+             * @property {?Object} userData - Arbitrary subscriber-defined object.
+             */
             this.viewer.raiseEvent( 'reset-size', {
-                contentSize: contentSize,
-                viewer: this.viewer
+                contentSize: contentSize
             });
         }
 
@@ -165,12 +179,22 @@ $.Viewport.prototype = {
     /**
      * @function
      * @param {Boolean} immediately
+     * @fires OpenSeadragon.Viewer.event:home
      */
     goHome: function( immediately ) {
         if( this.viewer ){
+            /**
+             * Raised when the "home" operation occurs (see {@link OpenSeadragon.Viewport#goHome}).
+             *
+             * @event home
+             * @memberof OpenSeadragon.Viewer
+             * @type {object}
+             * @property {OpenSeadragon.Viewer} eventSource - A reference to the Viewer which raised this event.
+             * @property {Boolean} immediately
+             * @property {?Object} userData - Arbitrary subscriber-defined object.
+             */
             this.viewer.raiseEvent( 'home', {
-                immediately: immediately,
-                viewer: this.viewer
+                immediately: immediately
             });
         }
         return this.fitBounds( this.getHomeBounds(), immediately );
@@ -299,6 +323,7 @@ $.Viewport.prototype = {
     /**
      * @function
      * @return {OpenSeadragon.Viewport} Chainable.
+     * @fires OpenSeadragon.Viewer.event:constrain
      */
     applyConstraints: function( immediately ) {
         var actualZoom = this.getZoom(),
@@ -369,9 +394,18 @@ $.Viewport.prototype = {
         }
 
         if( this.viewer ){
+            /**
+             * Raised when the viewport constraints are applied (see {@link OpenSeadragon.Viewport#applyConstraints}).
+             *
+             * @event constrain
+             * @memberof OpenSeadragon.Viewer
+             * @type {object}
+             * @property {OpenSeadragon.Viewer} eventSource - A reference to the Viewer which raised this event.
+             * @property {Boolean} immediately
+             * @property {?Object} userData - Arbitrary subscriber-defined object.
+             */
             this.viewer.raiseEvent( 'constrain', {
-                immediately: immediately,
-                viewer: this.viewer
+                immediately: immediately
             });
         }
 
@@ -495,6 +529,7 @@ $.Viewport.prototype = {
      * @param {OpenSeadragon.Point} delta
      * @param {Boolean} immediately
      * @return {OpenSeadragon.Viewport} Chainable.
+     * @fires OpenSeadragon.Viewer.event:pan
      */
     panBy: function( delta, immediately ) {
         var center = new $.Point(
@@ -510,6 +545,7 @@ $.Viewport.prototype = {
      * @param {OpenSeadragon.Point} center
      * @param {Boolean} immediately
      * @return {OpenSeadragon.Viewport} Chainable.
+     * @fires OpenSeadragon.Viewer.event:pan
      */
     panTo: function( center, immediately ) {
         if ( immediately ) {
@@ -521,10 +557,20 @@ $.Viewport.prototype = {
         }
 
         if( this.viewer ){
+            /**
+             * Raised when the viewport is panned (see {@link OpenSeadragon.Viewport#panBy} and {@link OpenSeadragon.Viewport#panTo}).
+             *
+             * @event pan
+             * @memberof OpenSeadragon.Viewer
+             * @type {object}
+             * @property {OpenSeadragon.Viewer} eventSource - A reference to the Viewer which raised this event.
+             * @property {OpenSeadragon.Point} center
+             * @property {Boolean} immediately
+             * @property {?Object} userData - Arbitrary subscriber-defined object.
+             */
             this.viewer.raiseEvent( 'pan', {
                 center: center,
-                immediately: immediately,
-                viewer: this.viewer
+                immediately: immediately
             });
         }
 
@@ -534,9 +580,10 @@ $.Viewport.prototype = {
     /**
      * @function
      * @return {OpenSeadragon.Viewport} Chainable.
+     * @fires OpenSeadragon.Viewer.event:zoom
      */
     zoomBy: function( factor, refPoint, immediately ) {
-        if( refPoint ) {
+        if( refPoint instanceof $.Point && !isNaN( refPoint.x ) && !isNaN( refPoint.y ) ) {
             refPoint = refPoint.rotate(
                 -this.degrees,
                 new $.Point( this.centerSpringX.target.value, this.centerSpringY.target.value )
@@ -548,10 +595,13 @@ $.Viewport.prototype = {
     /**
      * @function
      * @return {OpenSeadragon.Viewport} Chainable.
+     * @fires OpenSeadragon.Viewer.event:zoom
      */
     zoomTo: function( zoom, refPoint, immediately ) {
 
-        this.zoomPoint = refPoint instanceof $.Point ?
+        this.zoomPoint = refPoint instanceof $.Point &&
+            !isNaN(refPoint.x) &&
+            !isNaN(refPoint.y) ?
             refPoint :
             null;
 
@@ -562,11 +612,22 @@ $.Viewport.prototype = {
         }
 
         if( this.viewer ){
+            /**
+             * Raised when the viewport zoom level changes (see {@link OpenSeadragon.Viewport#zoomBy} and {@link OpenSeadragon.Viewport#zoomTo}).
+             *
+             * @event zoom
+             * @memberof OpenSeadragon.Viewer
+             * @type {object}
+             * @property {OpenSeadragon.Viewer} eventSource - A reference to the Viewer which raised this event.
+             * @property {Number} zoom
+             * @property {OpenSeadragon.Point} refPoint
+             * @property {Boolean} immediately
+             * @property {?Object} userData - Arbitrary subscriber-defined object.
+             */
             this.viewer.raiseEvent( 'zoom', {
                 zoom: zoom,
                 refPoint: refPoint,
-                immediately: immediately,
-                viewer: this.viewer
+                immediately: immediately
             });
         }
 
@@ -579,7 +640,6 @@ $.Viewport.prototype = {
      * debug mode doesn't rotate yet, and overlay rotation is only
      * partially supported.
      * @function
-     * @name OpenSeadragon.Viewport.prototype.setRotation
      * @return {OpenSeadragon.Viewport} Chainable.
      */
     setRotation: function( degrees ) {
@@ -592,7 +652,7 @@ $.Viewport.prototype = {
             throw new Error('Currently only 0, 90, 180, and 270 degrees are supported.');
         }
         this.degrees = degrees;
-        this.viewer.drawer.update();
+        this.viewer.forceRedraw();
         
         return this;
     },
@@ -600,7 +660,6 @@ $.Viewport.prototype = {
     /**
      * Gets the current rotation in degrees.
      * @function
-     * @name OpenSeadragon.Viewport.prototype.setRotation
      * @return {Number} The current rotation in degrees.
      */
     getRotation: function() {
@@ -610,27 +669,39 @@ $.Viewport.prototype = {
     /**
      * @function
      * @return {OpenSeadragon.Viewport} Chainable.
+     * @fires OpenSeadragon.Viewer.event:resize
      */
     resize: function( newContainerSize, maintain ) {
         var oldBounds = this.getBounds(),
             newBounds = oldBounds,
-            widthDeltaFactor = newContainerSize.x / this.containerSize.x;
+            widthDeltaFactor;
 
         this.containerSize = new $.Point(
             newContainerSize.x,
             newContainerSize.y
         );
 
-        if (maintain) {
+        if ( maintain ) {
+            widthDeltaFactor = newContainerSize.x / this.containerSize.x;
             newBounds.width  = oldBounds.width * widthDeltaFactor;
             newBounds.height = newBounds.width / this.getAspectRatio();
         }
 
         if( this.viewer ){
+            /**
+             * Raised when the viewer is resized (see {@link OpenSeadragon.Viewport#resize}).
+             *
+             * @event resize
+             * @memberof OpenSeadragon.Viewer
+             * @type {object}
+             * @property {OpenSeadragon.Viewer} eventSource - A reference to the Viewer which raised this event.
+             * @property {OpenSeadragon.Point} newContainerSize
+             * @property {Boolean} maintain
+             * @property {?Object} userData - Arbitrary subscriber-defined object.
+             */
             this.viewer.raiseEvent( 'resize', {
                 newContainerSize: newContainerSize,
-                maintain: maintain,
-                viewer: this.viewer
+                maintain: maintain
             });
         }
 
@@ -676,6 +747,7 @@ $.Viewport.prototype = {
 
 
     /**
+     * Convert a delta (translation vector) from pixels coordinates to viewport coordinates
      * @function
      * @param {Boolean} current - Pass true for the current location; defaults to false (target location).
      */
@@ -686,6 +758,7 @@ $.Viewport.prototype = {
     },
 
     /**
+     * Convert a delta (translation vector) from viewport coordinates to pixels coordinates.
      * @function
      * @param {Boolean} current - Pass true for the current location; defaults to false (target location).
      */
@@ -696,6 +769,7 @@ $.Viewport.prototype = {
     },
 
     /**
+     * Convert image pixel coordinates to viewport coordinates.
      * @function
      * @param {Boolean} current - Pass true for the current location; defaults to false (target location).
      */
@@ -709,6 +783,7 @@ $.Viewport.prototype = {
     },
 
     /**
+     * Convert viewport coordinates to image pixel coordinates.
      * @function
      * @param {Boolean} current - Pass true for the current location; defaults to false (target location).
      */
@@ -829,6 +904,128 @@ $.Viewport.prototype = {
             coordB.x,
             coordB.y
         );
+    },
+
+    /**
+     * Convert pixel coordinates relative to the viewer element to image
+     * coordinates.
+     * @param {OpenSeadragon.Point} pixel
+     * @returns {OpenSeadragon.Point}
+     */
+    viewerElementToImageCoordinates: function( pixel ) {
+        var point = this.pointFromPixel( pixel, true );
+        return this.viewportToImageCoordinates( point );
+    },
+
+    /**
+     * Convert pixel coordinates relative to the image to
+     * viewer element coordinates.
+     * @param {OpenSeadragon.Point} pixel
+     * @returns {OpenSeadragon.Point}
+     */
+    imageToViewerElementCoordinates: function( pixel ) {
+        var point = this.imageToViewportCoordinates( pixel );
+        return this.pixelFromPoint( point, true );
+    },
+
+    /**
+     * Convert pixel coordinates relative to the window to image coordinates.
+     * @param {OpenSeadragon.Point} pixel
+     * @returns {OpenSeadragon.Point}
+     */
+    windowToImageCoordinates: function( pixel ) {
+        var viewerCoordinates = pixel.minus(
+                OpenSeadragon.getElementPosition( this.viewer.element ));
+        return this.viewerElementToImageCoordinates( viewerCoordinates );
+    },
+
+    /**
+     * Convert image coordinates to pixel coordinates relative to the window.
+     * @param {OpenSeadragon.Point} pixel
+     * @returns {OpenSeadragon.Point}
+     */
+    imageToWindowCoordinates: function( pixel ) {
+        var viewerCoordinates = this.imageToViewerElementCoordinates( pixel );
+        return viewerCoordinates.plus(
+                OpenSeadragon.getElementPosition( this.viewer.element ));
+    },
+
+    /**
+     * Convert pixel coordinates relative to the viewer element to viewport
+     * coordinates.
+     * @param {OpenSeadragon.Point} pixel
+     * @returns {OpenSeadragon.Point}
+     */
+    viewerElementToViewportCoordinates: function( pixel ) {
+        return this.pointFromPixel( pixel, true );
+    },
+
+    /**
+     * Convert viewport coordinates to pixel coordinates relative to the
+     * viewer element.
+     * @param {OpenSeadragon.Point} point
+     * @returns {OpenSeadragon.Point}
+     */
+    viewportToViewerElementCoordinates: function( point ) {
+        return this.pixelFromPoint( point, true );
+    },
+
+    /**
+     * Convert pixel coordinates relative to the window to viewport coordinates.
+     * @param {OpenSeadragon.Point} pixel
+     * @returns {OpenSeadragon.Point}
+     */
+    windowToViewportCoordinates: function( pixel ) {
+        var viewerCoordinates = pixel.minus(
+                OpenSeadragon.getElementPosition( this.viewer.element ));
+        return this.viewerElementToViewportCoordinates( viewerCoordinates );
+    },
+
+    /**
+     * Convert viewport coordinates to pixel coordinates relative to the window.
+     * @param {OpenSeadragon.Point} point
+     * @returns {OpenSeadragon.Point}
+     */
+    viewportToWindowCoordinates: function( point ) {
+        var viewerCoordinates = this.viewportToViewerElementCoordinates( point );
+        return viewerCoordinates.plus(
+                OpenSeadragon.getElementPosition( this.viewer.element ));
+    },
+    
+    /**
+     * Convert a viewport zoom to an image zoom.
+     * Image zoom: ratio of the original image size to displayed image size.
+     * 1 means original image size, 0.5 half size...
+     * Viewport zoom: ratio of the displayed image's width to viewport's width.
+     * 1 means identical width, 2 means image's width is twice the viewport's width...
+     * @function
+     * @param {Number} viewportZoom The viewport zoom
+     * target zoom.
+     * @returns {Number} imageZoom The image zoom
+     */
+    viewportToImageZoom: function( viewportZoom ) {
+        var imageWidth = this.viewer.source.dimensions.x;
+        var containerWidth = this.getContainerSize().x;
+        var viewportToImageZoomRatio = containerWidth / imageWidth;
+        return viewportZoom * viewportToImageZoomRatio;
+    },
+    
+    /**
+     * Convert an image zoom to a viewport zoom.
+     * Image zoom: ratio of the original image size to displayed image size.
+     * 1 means original image size, 0.5 half size...
+     * Viewport zoom: ratio of the displayed image's width to viewport's width.
+     * 1 means identical width, 2 means image's width is twice the viewport's width...
+     * @function
+     * @param {Number} imageZoom The image zoom
+     * target zoom.
+     * @returns {Number} viewportZoom The viewport zoom
+     */
+    imageToViewportZoom: function( imageZoom ) {
+        var imageWidth = this.viewer.source.dimensions.x;
+        var containerWidth = this.getContainerSize().x;
+        var viewportToImageZoomRatio = imageWidth / containerWidth;
+        return imageZoom * viewportToImageZoomRatio;
     }
 };
 
