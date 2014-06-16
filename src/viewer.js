@@ -1745,22 +1745,12 @@ $.extend( $.Viewer.prototype, $.EventSource.prototype, $.ControlDock.prototype, 
             if ( this.previousButton ) {
                 if ( page > 0 ) {
                     //Enable previous button
+                    this.previousButton.enable();
+                } else {
+                    if ( !this.navPrevNextWrap ) {
+                        this.previousButton.disable();
                     }
                 }
- 
-                this.open( this.tileSources[ page ] );
-            }
- 
-            if( $.isFunction( this.onPageChange ) ){
-                if( page >= 0 && page < this.tileSources.length ) {
-                    this.onPageChange({
-                        page: page,
-                        viewer: this
-                     });
-                }
-            }
-            if( this.referenceStrip ){
-                this.referenceStrip.setFocus( page );
             }
       },
       
